@@ -3,42 +3,7 @@ guid: 10b655edeed86fb41910d41b38f41f0c
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: beard_d
-    second: {fileID: 2800000, guid: f2cad2365ad3dd147898461156aaa6b0, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: beard_n
-    second: {fileID: 2800000, guid: a2790e8415e1e4145bc11ecec9f6b4c3, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: beard_s
-    second: {fileID: 2800000, guid: 341894fa1e1bc09479b21ca4727fd0ea, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: body_d
-    second: {fileID: 2800000, guid: caa93d6388308ff4ca0cc2cfa1c55ae1, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: body_n
-    second: {fileID: 2800000, guid: fae1c368e55b98e4db90355a5a098aef, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: head_d
-    second: {fileID: 2800000, guid: 7b5722be6c9800f46b910d5cc98a71f2, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: head_n
-    second: {fileID: 2800000, guid: de341c1974140a540af2af10e22871a6, type: 3}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -127,12 +92,12 @@ ModelImporter:
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
-    skeletonHasParents: 0
+    skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 3
+  animationType: 2
   humanoidOversampling: 1
-  avatarSetup: 1
+  avatarSetup: 0
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
   importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0
