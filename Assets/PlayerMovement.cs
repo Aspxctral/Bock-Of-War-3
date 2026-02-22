@@ -1,23 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
-/// Third-person movement + axe inventory for the player.
+/// Third-person movement + axe inventory for the player, now using TextMeshPro.
 /// </summary>
 public class ThirdPersonController : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [Tooltip("Speed ​​at which the character moves. It is not affected by gravity or jumping.")]
     public float velocity = 5f;
-    [Tooltip("This value is added to the speed value while the character is sprinting.")]
     public float sprintAdittion = 3.5f;
-    [Tooltip("The higher the value, the higher the character will jump.")]
     public float jumpForce = 18f;
-    [Tooltip("Stay in the air. The higher the value, the longer the character floats before falling.")]
     public float jumpTime = 0.85f;
-    [Tooltip("Force that pulls the player down. Changing this value causes all movement, jumping and falling to be changed as well.")]
     public float gravity = 9.8f;
 
     [Header("Axe Inventory")]
@@ -25,9 +20,9 @@ public class ThirdPersonController : MonoBehaviour
     public float pickupRange = 2f;
     public LayerMask pickupLayer;
     public GameObject interactionUI; // "G Equip | K Store"
-    public Text interactionText;
+    public TMP_Text interactionText; // TextMeshPro component
     public GameObject popupText;     // Big cinematic text
-    public Text popupLabel;
+    public TMP_Text popupLabel;      // TextMeshPro component
 
     float jumpElapsedTime = 0f;
 
@@ -135,7 +130,6 @@ public class ThirdPersonController : MonoBehaviour
 
         dirY -= gravity * Time.deltaTime;
 
-        // Rotation
         Vector3 forward = Camera.main.transform.forward;
         Vector3 right = Camera.main.transform.right;
         forward.y = 0; right.y = 0;
