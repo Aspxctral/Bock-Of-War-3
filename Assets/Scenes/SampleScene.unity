@@ -14,7 +14,7 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 1
+  m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.023
@@ -6255,7 +6255,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.123316266, y: 0.0021351147, z: -0.00026532006, w: 0.9923651}
+  m_LocalRotation: {x: 0.1233162, y: 0.0024040274, z: -0.0002987365, w: 0.9923645}
   m_LocalPosition: {x: 92.6, y: 41.845, z: 187.61}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -14760,6 +14760,7 @@ MonoBehaviour:
   popupText: {fileID: 263712625}
   popupLabel: {fileID: 363338269}
   inventory: []
+  comboResetTime: 0.5
 --- !u!114 &709697432
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25462,7 +25463,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1232950577}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.123316266, y: 0.0021351147, z: -0.0002653201, w: 0.9923651}
+  m_LocalRotation: {x: 0.12331618, y: 0.002404027, z: -0.00029873644, w: 0.9923645}
   m_LocalPosition: {x: 92.6, y: 41.845, z: 187.61}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -41348,7 +41349,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00001502, y: 230}
+  m_AnchoredPosition: {x: -0.00001502, y: 378}
   m_SizeDelta: {x: 689.0606, y: 60.3588}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2089377185

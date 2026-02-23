@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-/// <summary>
-/// Third-person movement + axe inventory for the player, now using TextMeshPro.
-/// </summary>
 public class ThirdPersonController : MonoBehaviour
 {
     [Header("Movement Settings")]
@@ -19,27 +16,35 @@ public class ThirdPersonController : MonoBehaviour
     public Transform rightHand;
     public float pickupRange = 2f;
     public LayerMask pickupLayer;
-    public GameObject interactionUI; // "G Equip | K Store"
-    public TMP_Text interactionText; // TextMeshPro component
-    public GameObject popupText;     // Big cinematic text
-    public TMP_Text popupLabel;      // TextMeshPro component
+    public GameObject interactionUI;
+    public TMP_Text interactionText;
+    public GameObject popupText;
+    public TMP_Text popupLabel;
 
     float jumpElapsedTime = 0f;
 
     // Player states
     bool isJumping = false;
     bool isSprinting = false;
+    bool isCombat = false; // fight mode
 
     // Inputs
     float inputHorizontal;
     float inputVertical;
     bool inputJump;
     bool inputSprint;
+    bool inputCombatToggle;
 
     // Axe system
     private GameObject nearbyItem;
     private GameObject equippedItem;
     public List<GameObject> inventory = new List<GameObject>();
+
+    // Combo system
+    private int comboStep = 0;
+    private float comboTimer = 0f;
+    public float comboResetTime = 2.5f;
+    private bool canPunch = true;
 
     Animator animator;
     CharacterController cc;
@@ -61,6 +66,14 @@ public class ThirdPersonController : MonoBehaviour
         inputJump = Input.GetAxis("Jump") == 1f;
         inputSprint = Input.GetAxis("Fire3") == 1f;
 
+        // Combat toggle
+        inputCombatToggle = Input.GetKeyDown(KeyCode.F);
+        if (inputCombatToggle)
+        {
+            isCombat = !isCombat;
+            animator.SetBool("isCombat", isCombat);
+        }
+
         HandleMovementAnimations();
         HandleJump();
 
@@ -78,6 +91,9 @@ public class ThirdPersonController : MonoBehaviour
             HandleInventoryToggle();
         }
 
+        // Punch combo
+        HandlePunchCombo();
+
         HeadHittingDetect();
     }
 
@@ -90,22 +106,24 @@ public class ThirdPersonController : MonoBehaviour
 
     void HandleMovementAnimations()
     {
-        if (cc.isGrounded && animator != null)
+        if (animator != null)
         {
-            float minSpeed = 0.9f;
-            animator.SetBool("run", cc.velocity.magnitude > minSpeed);
+            // Prevent jumping while in combat
+            if (isCombat)
+                inputJump = false;
 
-            isSprinting = cc.velocity.magnitude > minSpeed && inputSprint;
+            float minSpeed = 0.1f; // very sensitive so walk triggers easily
+            bool isMoving = cc.velocity.magnitude > minSpeed;
+
+            animator.SetBool("run", isMoving && !isCombat);
+            isSprinting = isMoving && inputSprint && !isCombat;
             animator.SetBool("sprint", isSprinting);
         }
-
-        if (animator != null)
-            animator.SetBool("air", !cc.isGrounded);
     }
 
     void HandleJump()
     {
-        if (inputJump && cc.isGrounded)
+        if (!isCombat && inputJump && cc.isGrounded)
             isJumping = true;
     }
 
@@ -248,7 +266,6 @@ public class ThirdPersonController : MonoBehaviour
 
         canvasGroup.alpha = 0f;
 
-        // Fade in
         while (canvasGroup.alpha < 1f)
         {
             canvasGroup.alpha += Time.deltaTime * 3f;
@@ -257,7 +274,6 @@ public class ThirdPersonController : MonoBehaviour
 
         yield return new WaitForSeconds(2f);
 
-        // Fade out
         while (canvasGroup.alpha > 0f)
         {
             canvasGroup.alpha -= Time.deltaTime * 2f;
@@ -265,6 +281,39 @@ public class ThirdPersonController : MonoBehaviour
         }
 
         popupText.SetActive(false);
+    }
+
+    #endregion
+
+    #region Punch Combo
+
+    void HandlePunchCombo()
+    {
+        // Countdown combo window
+        if (comboTimer > 0f)
+        {
+            comboTimer -= Time.deltaTime;
+            if (comboTimer <= 0f)
+                comboStep = 0;
+        }
+
+        // Left click combo input
+        if (Input.GetMouseButtonDown(0) && canPunch && isCombat && animator != null)
+        {
+            if (comboTimer > 0f)
+            {
+                comboStep = Mathf.Clamp(comboStep + 1, 1, 3);
+            }
+            else
+            {
+                comboStep = 1;
+            }
+
+            animator.SetInteger("ComboStep", comboStep);
+            animator.SetTrigger("Punch");
+
+            comboTimer = comboResetTime;
+        }
     }
 
     #endregion
