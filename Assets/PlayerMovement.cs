@@ -1,320 +1,145 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using TMPro;
+﻿using UnityEngine;
 
-public class ThirdPersonController : MonoBehaviour
+[RequireComponent(typeof(Rigidbody))]
+public class PlayerMovement : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    public float velocity = 5f;
-    public float sprintAdittion = 3.5f;
-    public float jumpForce = 18f;
-    public float jumpTime = 0.85f;
-    public float gravity = 9.8f;
+    [Header("Movement")]
+    public float walkSpeed = 4f;
+    public float sprintSpeed = 7f;
+    public float jumpForce = 7f;
 
-    [Header("Axe Inventory")]
-    public Transform rightHand;
-    public float pickupRange = 2f;
-    public LayerMask pickupLayer;
-    public GameObject interactionUI;
-    public TMP_Text interactionText;
-    public GameObject popupText;
-    public TMP_Text popupLabel;
+    [Header("Camera")]
+    public Transform cameraTransform;
 
-    float jumpElapsedTime = 0f;
+    private Rigidbody rb;
+    private Animator anim;
 
-    // Player states
-    bool isJumping = false;
-    bool isSprinting = false;
-    bool isCombat = false; // fight mode
-
-    // Inputs
-    float inputHorizontal;
-    float inputVertical;
-    bool inputJump;
-    bool inputSprint;
-    bool inputCombatToggle;
-
-    // Axe system
-    private GameObject nearbyItem;
-    private GameObject equippedItem;
-    public List<GameObject> inventory = new List<GameObject>();
-
-    // Combo system
-    private int comboStep = 0;
-    private float comboTimer = 0f;
-    public float comboResetTime = 2.5f;
-    private bool canPunch = true;
-
-    Animator animator;
-    CharacterController cc;
+    private float moveX;
+    private float moveZ;
+    private bool isGrounded;
+    private bool jumpRequested;
 
     void Start()
     {
-        cc = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
-        if (animator == null)
-            Debug.LogWarning("No Animator component found. Animations won't work.");
+        anim = GetComponent<Animator>();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
-        // Movement inputs
-        inputHorizontal = Input.GetAxis("Horizontal");
-        inputVertical = Input.GetAxis("Vertical");
-        inputJump = Input.GetAxis("Jump") == 1f;
-        inputSprint = Input.GetAxis("Fire3") == 1f;
+        // Input
+        moveX = Input.GetAxisRaw("Horizontal");
+        moveZ = Input.GetAxisRaw("Vertical");
 
-        // Combat toggle
-        inputCombatToggle = Input.GetKeyDown(KeyCode.F);
-        if (inputCombatToggle)
+        // Request jump if grounded
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            isCombat = !isCombat;
-            animator.SetBool("isCombat", isCombat);
+            jumpRequested = true;
         }
 
-        HandleMovementAnimations();
-        HandleJump();
-
-        // Axe pickup/equip system
-        CheckForItem();
-
-        if (nearbyItem != null && Input.GetKeyDown(KeyCode.G))
-        {
-            EquipItem(nearbyItem);
-            ShowPopup("LEVIATHAN AXE ACQUIRED");
-        }
-
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            HandleInventoryToggle();
-        }
-
-        // Punch combo
-        HandlePunchCombo();
-
-        HeadHittingDetect();
+        HandleAnimations();
     }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
-        ApplyMovement();
-    }
+        float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
 
-    #region Movement
+        // Camera-relative movement
+        Vector3 camForward = cameraTransform.forward;
+        Vector3 camRight = cameraTransform.right;
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
 
-    void HandleMovementAnimations()
-    {
-        if (animator != null)
+        Vector3 moveDir = camForward * moveZ + camRight * moveX;
+        Vector3 velocity = moveDir.normalized * speed;
+
+        // Apply horizontal movement
+        rb.linearVelocity = new Vector3(
+            velocity.x,
+            rb.linearVelocity.y,
+            velocity.z
+        );
+
+        // Apply jump if requested
+        if (jumpRequested)
         {
-            // Prevent jumping while in combat
-            if (isCombat)
-                inputJump = false;
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+            TriggerJumpAnimation();
+            jumpRequested = false;
+            isGrounded = false; // prevent immediate reset
+        }
 
-            float minSpeed = 0.1f; // very sensitive so walk triggers easily
-            bool isMoving = cc.velocity.magnitude > minSpeed;
-
-            animator.SetBool("run", isMoving && !isCombat);
-            isSprinting = isMoving && inputSprint && !isCombat;
-            animator.SetBool("sprint", isSprinting);
+        // Rotate player toward movement
+        if (moveDir.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+            rb.MoveRotation(
+                Quaternion.Slerp(rb.rotation, targetRotation, 15f * Time.fixedDeltaTime)
+            );
         }
     }
 
-    void HandleJump()
+    void HandleAnimations()
     {
-        if (!isCombat && inputJump && cc.isGrounded)
-            isJumping = true;
-    }
+        if (anim == null) return;
 
-    void ApplyMovement()
-    {
-        float velocityAddition = isSprinting ? sprintAdittion : 0f;
+        // Don't override jump animation while mid-air
+        if (anim.GetBool("jump")) return;
 
-        float dirX = inputHorizontal * (velocity + velocityAddition) * Time.deltaTime;
-        float dirZ = inputVertical * (velocity + velocityAddition) * Time.deltaTime;
-        float dirY = 0f;
+        bool moving = moveX != 0 || moveZ != 0;
+        bool sprinting = moving && Input.GetKey(KeyCode.LeftShift);
 
-        if (isJumping)
+        if (!moving)
         {
-            dirY = Mathf.SmoothStep(jumpForce, jumpForce * 0.3f, jumpElapsedTime / jumpTime) * Time.deltaTime;
-            jumpElapsedTime += Time.deltaTime;
-            if (jumpElapsedTime >= jumpTime)
-            {
-                isJumping = false;
-                jumpElapsedTime = 0f;
-            }
+            anim.SetBool("idle", true);
+            anim.SetBool("run", false);
+            anim.SetBool("sprint", false);
         }
-
-        dirY -= gravity * Time.deltaTime;
-
-        Vector3 forward = Camera.main.transform.forward;
-        Vector3 right = Camera.main.transform.right;
-        forward.y = 0; right.y = 0;
-        forward.Normalize(); right.Normalize();
-        forward *= dirZ;
-        right *= dirX;
-
-        if (dirX != 0 || dirZ != 0)
+        else if (sprinting)
         {
-            float angle = Mathf.Atan2(forward.x + right.x, forward.z + right.z) * Mathf.Rad2Deg;
-            Quaternion rotation = Quaternion.Euler(0, angle, 0);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 0.15f);
-        }
-
-        Vector3 verticalDir = Vector3.up * dirY;
-        Vector3 horizontalDir = forward + right;
-        cc.Move(verticalDir + horizontalDir);
-    }
-
-    void HeadHittingDetect()
-    {
-        float headHitDistance = 1.1f;
-        Vector3 ccCenter = transform.TransformPoint(cc.center);
-        float hitCalc = cc.height / 2f * headHitDistance;
-
-        if (Physics.Raycast(ccCenter, Vector3.up, hitCalc))
-        {
-            jumpElapsedTime = 0;
-            isJumping = false;
-        }
-    }
-
-    #endregion
-
-    #region Axe Inventory
-
-    void CheckForItem()
-    {
-        Collider[] hits = Physics.OverlapSphere(transform.position, pickupRange, pickupLayer);
-        if (hits.Length > 0)
-        {
-            nearbyItem = hits[0].transform.root.gameObject;
-            if (interactionUI != null && interactionText != null)
-            {
-                interactionUI.SetActive(true);
-                interactionText.text = "Press G to Equip\nPress K to Store";
-            }
+            anim.SetBool("idle", false);
+            anim.SetBool("run", false);
+            anim.SetBool("sprint", true);
         }
         else
         {
-            nearbyItem = null;
-            if (interactionUI != null)
-                interactionUI.SetActive(false);
+            anim.SetBool("idle", false);
+            anim.SetBool("run", true);
+            anim.SetBool("sprint", false);
         }
     }
+void TriggerJumpAnimation()
+{
+    // Smoothly blend from current state to Jump over 0.1s
+    anim.CrossFade("Jump", 0.1f);
+    anim.SetBool("jump", true);
+}
 
-    void EquipItem(GameObject item)
+    // Ground detection using collisions
+    void OnCollisionStay(Collision collision)
     {
-        equippedItem = item;
-
-        Rigidbody rb = item.GetComponent<Rigidbody>();
-        if (rb != null)
+        if (collision.gameObject.CompareTag("Ground"))
         {
-            rb.isKinematic = true;
-            rb.useGravity = false;
+            isGrounded = true;
+
+            // Reset jump animation on landing
+            if (anim.GetBool("jump"))
+                anim.SetBool("jump", false);
         }
-
-        Collider col = item.GetComponent<Collider>();
-        if (col != null)
-            col.enabled = false;
-
-        item.transform.SetParent(rightHand);
-        item.transform.localPosition = new Vector3(-0.12f, 0.2f, 0f);
-        item.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-
-        if (interactionUI != null)
-            interactionUI.SetActive(false);
     }
 
-    void HandleInventoryToggle()
+    void OnCollisionExit(Collision collision)
     {
-        if (equippedItem != null)
-        {
-            inventory.Add(equippedItem);
-            equippedItem.SetActive(false);
-            equippedItem = null;
-            ShowPopup("AXE STORED");
-        }
-        else if (inventory.Count > 0)
-        {
-            GameObject item = inventory[0];
-            inventory.RemoveAt(0);
-            item.SetActive(true);
-            EquipItem(item);
-            ShowPopup("AXE EQUIPPED");
-        }
+        if (collision.gameObject.CompareTag("Ground"))
+            isGrounded = false;
     }
-
-    void ShowPopup(string message)
-    {
-        StopAllCoroutines();
-        StartCoroutine(PopupRoutine(message));
-    }
-
-    IEnumerator PopupRoutine(string message)
-    {
-        if (popupLabel == null || popupText == null)
-            yield break;
-
-        popupLabel.text = message;
-        popupText.SetActive(true);
-
-        CanvasGroup canvasGroup = popupText.GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-            canvasGroup = popupText.AddComponent<CanvasGroup>();
-
-        canvasGroup.alpha = 0f;
-
-        while (canvasGroup.alpha < 1f)
-        {
-            canvasGroup.alpha += Time.deltaTime * 3f;
-            yield return null;
-        }
-
-        yield return new WaitForSeconds(2f);
-
-        while (canvasGroup.alpha > 0f)
-        {
-            canvasGroup.alpha -= Time.deltaTime * 2f;
-            yield return null;
-        }
-
-        popupText.SetActive(false);
-    }
-
-    #endregion
-
-    #region Punch Combo
-
-    void HandlePunchCombo()
-    {
-        // Countdown combo window
-        if (comboTimer > 0f)
-        {
-            comboTimer -= Time.deltaTime;
-            if (comboTimer <= 0f)
-                comboStep = 0;
-        }
-
-        // Left click combo input
-        if (Input.GetMouseButtonDown(0) && canPunch && isCombat && animator != null)
-        {
-            if (comboTimer > 0f)
-            {
-                comboStep = Mathf.Clamp(comboStep + 1, 1, 3);
-            }
-            else
-            {
-                comboStep = 1;
-            }
-
-            animator.SetInteger("ComboStep", comboStep);
-            animator.SetTrigger("Punch");
-
-            comboTimer = comboResetTime;
-        }
-    }
-
-    #endregion
 }

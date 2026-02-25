@@ -6255,7 +6255,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.1233162, y: 0.0024040274, z: -0.0002987365, w: 0.9923645}
+  m_LocalRotation: {x: 0.1233163, y: 0.0020267025, z: -0.00025184825, w: 0.99236536}
   m_LocalPosition: {x: 92.6, y: 41.845, z: 187.61}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -10294,11 +10294,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 7.98, z: 1}
   m_Center: {x: 0, y: 2.67, z: 0}
---- !u!4 &495414058 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1852576806548013000, guid: fd3f260b4264050409e9603c1f817204, type: 3}
-  m_PrefabInstance: {fileID: 808378614}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &496910877 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f189a538aa9f36d488fa5fdada8539db, type: 3}
@@ -14745,22 +14740,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e86773371e0faf7488ada0457321254a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  velocity: 5
-  sprintAdittion: 3.5
-  jumpForce: 18
-  jumpTime: 0.85
-  gravity: 9.8
-  rightHand: {fileID: 495414058}
-  pickupRange: 2
-  pickupLayer:
-    serializedVersion: 2
-    m_Bits: 8
-  interactionUI: {fileID: 787580761}
-  interactionText: {fileID: 827209949}
-  popupText: {fileID: 263712625}
-  popupLabel: {fileID: 363338269}
-  inventory: []
-  comboResetTime: 0.5
+  walkSpeed: 4
+  sprintSpeed: 7
+  jumpForce: 8
+  cameraTransform: {fileID: 1232950583}
 --- !u!114 &709697432
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14811,6 +14794,91 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 2.35, z: 0}
+--- !u!54 &709697437
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709697430}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 1
+  m_Constraints: 80
+  m_CollisionDetection: 1
+--- !u!136 &709697438
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709697430}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &709697439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709697430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a96395f6b8074947870b9fa3c0d10a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rightHand: {fileID: 0}
+  pickupRange: 2
+  pickupLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  interactionUI: {fileID: 787580761}
+  interactionText: {fileID: 827209949}
+  popupText: {fileID: 263712625}
+  popupLabel: {fileID: 363338269}
+  inventory: []
+--- !u!114 &709697440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 709697430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93e278c7ba22a3c4fbd0cf2960a235f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cooldownTime: 2
 --- !u!1 &714026381 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f189a538aa9f36d488fa5fdada8539db, type: 3}
@@ -16402,6 +16470,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fd3f260b4264050409e9603c1f817204, type: 3}
       insertIndex: -1
       addedObject: {fileID: 709697431}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fd3f260b4264050409e9603c1f817204, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 709697439}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fd3f260b4264050409e9603c1f817204, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 709697437}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fd3f260b4264050409e9603c1f817204, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 709697438}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: fd3f260b4264050409e9603c1f817204, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 709697440}
   m_SourcePrefab: {fileID: 100100000, guid: fd3f260b4264050409e9603c1f817204, type: 3}
 --- !u!1 &812116701 stripped
 GameObject:
@@ -25463,7 +25543,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1232950577}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.12331618, y: 0.002404027, z: -0.00029873644, w: 0.9923645}
+  m_LocalRotation: {x: 0.1233163, y: 0.0020267025, z: -0.00025184825, w: 0.9923653}
   m_LocalPosition: {x: 92.6, y: 41.845, z: 187.61}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -40005,7 +40085,7 @@ GameObject:
   - component: {fileID: 2019147083}
   m_Layer: 0
   m_Name: Terrain
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
@@ -41349,7 +41429,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00001502, y: 378}
+  m_AnchoredPosition: {x: -0.00001502, y: 261}
   m_SizeDelta: {x: 689.0606, y: 60.3588}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2089377185
