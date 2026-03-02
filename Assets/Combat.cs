@@ -20,34 +20,38 @@ public class Fighter : MonoBehaviour
         anim = GetComponent<Animator>();
     }
 
-    void Update()
-    {
-        HandleCombatToggle();
-        UpdateHasAxe();          // continuously update the animator
-        HandleComboInput();
-        ResetComboIfTooSlow();
-    }
+void Update()
+{
+    HandleCombatToggle();
+    UpdateHasAxe();
+    HandleComboInput();
+    ResetComboIfTooSlow();
+}
 
     // Only set hasAxe for attack branch, not idle
-    void UpdateHasAxe()
-    {
-        bool hasAxe = false;
+ void UpdateHasAxe()
+{
+    bool hasAxe = false;
 
-        if (isCombat && inventory && inventory.rightHand)
+    if (inventory != null && inventory.rightHand != null)
+    {
+        Transform hand = inventory.rightHand;
+
+        // Check direct children only
+        for (int i = 0; i < hand.childCount; i++)
         {
-            foreach (Transform child in inventory.rightHand)
+            Transform child = hand.GetChild(i);
+
+            if (child.CompareTag("Pickup") && child.gameObject.activeSelf)
             {
-                if (child.CompareTag("Pickup") && child.gameObject.activeInHierarchy)
-                {
-                    hasAxe = true;
-                    break;
-                }
+                hasAxe = true;
+                break;
             }
         }
-
-        // Set Animator bool, but fight idle won't automatically trigger from this
-        anim.SetBool(hasAxeParam, hasAxe);
     }
+
+    anim.SetBool("hasAxe", hasAxe);
+}
 
     void HandleCombatToggle()
     {
