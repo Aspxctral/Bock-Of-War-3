@@ -929,8 +929,13 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
+=======
+    skeletonHasParents: 0
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 340f99b8334a14c4a8a01dce6e1e5348, type: 3}
+>>>>>>> Stashed changes
 =======
     skeletonHasParents: 0
   lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 340f99b8334a14c4a8a01dce6e1e5348, type: 3}
@@ -939,7 +944,11 @@ ModelImporter:
   animationType: 2
   humanoidOversampling: 1
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   avatarSetup: 0
+=======
+  avatarSetup: 2
+>>>>>>> Stashed changes
 =======
   avatarSetup: 2
 >>>>>>> Stashed changes
