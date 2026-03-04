@@ -1,0 +1,28 @@
+Revised Raiden MK9 by judgmentfist
+-here's a new raiden! he's been upgrade, repainted, and resculpted extensively to match the high-definition realistic aesthetic of my mkx repaints and mkx-style new models. i was especially aiming for a more nuanced and expressive face design, as well as better textures on the outfit. i hope you like him!
+-his preview pose is included as raidenpreview.pose
+-the model is completely remade with a repainted diffuse map and new light, norm, and spec maps. he's also been scaled up to match his mk9 height, and re-posed for a similar physical build, resulting in a significantly different look
+-his cowl has been completely removed with careful paint-work, and hair added to his head, resulting in a fully unmasked raiden. his hat and amulet are optional, and hidden by default
+-raiden's armature is changed to stand naturally with his arms at his sides, rather than the standard t-pose. keep this in mind when posing him or using pre-made poses
+-many thanks to romero1718 for the raiden model: https://romero1718.deviantart.com/art/Raiden-Primary-Mortal-Kombat-9-483689152
+and moogleoutfitters for the hair: https://moogleoutfitters.deviantart.com/art/TERA-Online-Human-Female-Hairstyles-609788471
+
+detailed changelog, if it interests you:
+-everything about raiden has been changed. that is not an exaggeration - his texture is fully and completely repainted, body edited extensively, face revised to match his mkx model as closely as possible. the outfit physical structure and color scheme is the only broad similarity that remains
+-the most obvious change, as mentioned above, is his unmasking. i repainted his diffuse and lightmaps to add skin texture and tone across his entire face, completely removing the cowl, and added flowing silvery hair on top that resembles his movie version and a few of his concept arts/alternate game looks.
+-his skin tone on his face and hands is changed to match his mkx version, which is darker than his default mk9 look. overall, he is intended to look more asian as his mkx version does, rather than the very pale and somewhat white mk9 look. since raiden is originally a japanese god this seemed like an appropriate design decision
+-his face structure is also resculpted mkx-style, including the entire posing armature. this doesn't change at all his ability to look expressive when face-posed - in fact it somewhat increases it, in my opinion. play around with his posing a little and see what you think, i believe he emotes very nicely
+-his eyebrows are changed from dark to greyish, and his stubble is removed. his lips are much darker and more pink, again in line with his mkx version. his eyes are less wide-open (due to limited eyelid armature, i couldn't get them to 100% match the mkx version, unlike most of the rest of his face). his nose is a bit larger, his cheekbones are more defined, and other such minor changes - compare the models if you'd like, there are just way too many changes to list!
+-like his face, his hands are repainted in skin tone and texture, intended to look more realistic and hd (unlike most other characters, raiden has no bare skin other than his hands and face)
+-his physical build required a lot of editing to make it match. his hips and waist are wider and his stance more open, rather than the mk9 models' narrow standing pose. his shoulders are lower, and his arms and legs thicker and more muscular. all body details have been adjusted to match mkx, for cross-game consistency when creating renders
+-the cloth flaps at front and back are edited to hang naturally with gravity, rather than sticking out as default mk9 model fabric pieces tend to do
+-his head is re-scaled as well to match realistic mkx proportions (7-7.5 heads tall) vs exaggerated mk9 proportions (8-8.5 heads tall), like all my other models
+-his amulet is now shinier with the dragon emblem more strongly defined. the color matches his eyes and his tunic much more closely, and the details stand out more. this is entirely personal taste but i thought that the amulet should be more in line with his design motifs
+-his hat is a little brighter in color, and more shaded underneath the brim, but there are very few changes to it, comparatively
+-all cloth pieces on his outfit are extensively retextured and repainted. the white parts of his outfit are now a greyish storm color with white cloud patterning on top. the blue over-tunic is a similar kind of fabric that is less shiny and more visibly textured, with fabric wrinkles and surface details. the emblems on his shoulders are mostly unchanged. there is much more shading around his collar and the overlapping tunic pieces
+-the black belt at his waist and the two pieces connecting to his pants are now a lighter grey fabric with a rough texture and significant cloth wrinkles. this was the best i could do to make it look more natural rather than simply a dull black strip of polygons across the middle of his outfit. the straps around his arms and legs are a similar material, as well 
+-the greaves and gauntlets are made from embossed metal with lots of texture depth, for a more interesting vintage look rather than pure shiny effects. they still have some gloss, but they reflect light differently with the surface details now
+
+further note: his rigging/weighting was slightly adjusted to fix a few issues with his shoulder bones and spine upper. while the shoulders are fine now, i'd suggest using the spine middle bone as well if you're posing his torso, rather than turning upper spine too far. however, to my knowledge, there's no issues beyond that!
+
+please appreciate this lovely thunder god & give credit wherever you use him. thanks for downloading and have a great day 
