@@ -3,86 +3,104 @@ using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
-    [Header("References")]
     public Transform player;
 
-    [Header("Patrol Settings")]
-    public Transform[] patrolPoints;      // Assign points in order
+    [Header("Patrol")]
+    public Transform[] patrolPoints;
     public float patrolSpeed = 2f;
-    public float waitTimeAtPoint = 2f;
+    public float waitTime = 2f;
 
-    [Header("Chase Settings")]
-    public float chaseSpeed = 4f;
+    [Header("Chase")]
+    public float chaseSpeed = 4.5f;
     public float detectionRadius = 8f;
-    public float stoppingDistance = 1.5f;
 
     private NavMeshAgent agent;
-    private int currentPointIndex = 0;
-    private float waitTimer = 0f;
+    private Animator anim;
 
-    private bool isChasing = false;
+    private int patrolIndex = 0;
+    private float waitTimer;
+
+    private bool isChasing;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
+
+        agent.speed = patrolSpeed;
+
         if (patrolPoints.Length > 0)
-        {
-            agent.destination = patrolPoints[0].position;
-            agent.speed = patrolSpeed;
-        }
+            agent.SetDestination(patrolPoints[0].position);
     }
 
     void Update()
     {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        float dist = Vector3.Distance(transform.position, player.position);
 
-        // Check if player is close
-        isChasing = distanceToPlayer <= detectionRadius;
-
-        if (isChasing)
+        if (dist < detectionRadius)
         {
-            agent.speed = chaseSpeed;
-            agent.stoppingDistance = stoppingDistance;
-            agent.SetDestination(player.position);
+            ChasePlayer();
         }
         else
         {
             Patrol();
         }
+
+        HandleAnimations();
     }
 
     void Patrol()
     {
-        if (patrolPoints.Length == 0) return;
+        isChasing = false;
 
         agent.speed = patrolSpeed;
-        agent.stoppingDistance = 0f;
 
-        if (!agent.pathPending && agent.remainingDistance <= 0.2f)
+        if (patrolPoints.Length == 0) return;
+
+        if (!agent.pathPending && agent.remainingDistance < 0.2f)
         {
             waitTimer += Time.deltaTime;
-            if (waitTimer >= waitTimeAtPoint)
+
+            if (waitTimer >= waitTime)
             {
-                currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
-                agent.SetDestination(patrolPoints[currentPointIndex].position);
+                patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
+                agent.SetDestination(patrolPoints[patrolIndex].position);
                 waitTimer = 0f;
             }
         }
     }
 
-    void OnDrawGizmosSelected()
+    void ChasePlayer()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, detectionRadius);
+        isChasing = true;
 
-        Gizmos.color = Color.green;
-        if (patrolPoints != null)
+        agent.speed = chaseSpeed;
+        agent.stoppingDistance = 0f;
+
+        float dist = Vector3.Distance(transform.position, player.position);
+
+        if (dist > 1f)
         {
-            for (int i = 0; i < patrolPoints.Length; i++)
-            {
-                if (patrolPoints[i] != null)
-                    Gizmos.DrawSphere(patrolPoints[i].position, 0.3f);
-            }
+            agent.SetDestination(player.position);
         }
+        else
+        {
+            // Disable Nav steering when very close
+            agent.ResetPath();
+
+            Vector3 dir = (player.position - transform.position).normalized;
+            transform.position += dir * chaseSpeed * Time.deltaTime;
+        }
+    }
+
+    void HandleAnimations()
+    {
+        float speed = agent.velocity.magnitude;
+
+        bool walking = speed > 0.1f && !isChasing;
+        bool running = speed > 0.1f && isChasing;
+
+        anim.SetBool("isWalking", walking);
+        anim.SetBool("isRunning", running);
     }
 }
