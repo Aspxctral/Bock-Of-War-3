@@ -1,95 +1,65 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
-using System.Linq;
+using UnityEngine.UI;
+using TMPro; 
 
 public class PlayerInventory : MonoBehaviour
 {
     public Transform rightHand;
     public float pickupRange = 2f;
+    public LayerMask pickupLayer;
 
     [Header("UI")]
-    public GameObject interactionUI;
+    public GameObject interactionUI;     // "G Equip | K Store"
     public TMP_Text interactionText;
-    public GameObject popupText;
+    public GameObject popupText;         // Big cinematic text
     public TMP_Text popupLabel;
 
-    [Header("Weapon Hand Positioning")]
-    public Vector3 equipLocalPosition = new Vector3(0.08f, -0.12f, 0.35f);
-    public Vector3 equipLocalRotation = new Vector3(180f, 180f, -5f);
-
-    [Header("Equipped References")]
-    public GameObject equippedItem => _equippedItem;
-    public WeaponDamage equippedWeapon { get; private set; }
-
-    private GameObject _equippedItem;
     private GameObject nearbyItem;
+    private GameObject equippedItem;
+
     public List<GameObject> inventory = new List<GameObject>();
 
     void Update()
     {
-        CheckForPickup();
+        CheckForItem();
 
-        if (nearbyItem != null)
+        // Equip from ground
+        if (nearbyItem != null && Input.GetKeyDown(KeyCode.G))
         {
-            if (Input.GetKeyDown(KeyCode.G))
-                EquipItem(nearbyItem);
-            else if (Input.GetKeyDown(KeyCode.K))
-                StoreItem(nearbyItem);
+            EquipItem(nearbyItem);
+            ShowPopup("LEVIATHAN AXE ACQUIRED");
         }
-        else if (Input.GetKeyDown(KeyCode.K))
+
+        // Store / Toggle inventory
+        if (Input.GetKeyDown(KeyCode.K))
         {
-            ToggleInventory();
+            HandleInventoryToggle();
         }
     }
 
-    void CheckForPickup()
+    void CheckForItem()
     {
-        nearbyItem = null;
-        Collider[] hits = Physics.OverlapSphere(transform.position, pickupRange);
-        List<(GameObject item, float dist)> candidates = new List<(GameObject, float)>();
+        Collider[] hits = Physics.OverlapSphere(transform.position, pickupRange, pickupLayer);
 
-        foreach (Collider hit in hits)
+        if (hits.Length > 0)
         {
-            PickupItem pu = hit.GetComponentInParent<PickupItem>()
-                       ?? hit.GetComponentInChildren<PickupItem>()
-                       ?? hit.GetComponent<PickupItem>();
+            nearbyItem = hits[0].transform.root.gameObject;
 
-            if (pu != null && !pu.isPickedUp)
-            {
-                GameObject item = pu.gameObject;
-                if (item.transform.IsChildOf(rightHand) || inventory.Contains(item))
-                    continue;
-
-                float dist = Vector3.Distance(transform.position, item.transform.position);
-                candidates.Add((item, dist));
-            }
-        }
-
-        if (candidates.Count > 0)
-        {
-            candidates = candidates.OrderBy(c => c.dist).ToList();
-            nearbyItem = candidates[0].item;
             interactionUI.SetActive(true);
             interactionText.text = "Press G to Equip\nPress K to Store";
         }
         else
         {
+            nearbyItem = null;
             interactionUI.SetActive(false);
         }
     }
 
     void EquipItem(GameObject item)
     {
-        _equippedItem = item;
-
-        if (item.TryGetComponent<PickupItem>(out var pickup))
-            pickup.isPickedUp = true;
-
-        equippedWeapon = item.GetComponent<WeaponDamage>();
-        if (equippedWeapon != null)
-            equippedWeapon.DisableDamage();
+        equippedItem = item;
 
         Rigidbody rb = item.GetComponent<Rigidbody>();
         if (rb != null)
@@ -100,58 +70,37 @@ public class PlayerInventory : MonoBehaviour
 
         Collider col = item.GetComponent<Collider>();
         if (col != null)
-            col.isTrigger = true;
+        {
+            col.enabled = false;
+        }
 
         item.transform.SetParent(rightHand);
-        item.transform.localPosition = equipLocalPosition;
-        item.transform.localEulerAngles = equipLocalRotation;
+        item.transform.localPosition = new Vector3(-0.12f, 0.2f, 0f);
+        item.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
 
         interactionUI.SetActive(false);
-        ShowPopup("AXE ACQUIRED");
     }
 
-    void StoreItem(GameObject item)
+    void HandleInventoryToggle()
     {
-        if (item.TryGetComponent<PickupItem>(out var pickup))
-            pickup.isPickedUp = true;
-
-        inventory.Add(item);
-        Rigidbody rb = item.GetComponent<Rigidbody>();
-        if (rb != null)
+        // Store currently equipped
+        if (equippedItem != null)
         {
-            rb.isKinematic = false;
-            rb.useGravity = true;
-        }
-        item.transform.SetParent(null);
-        item.SetActive(false);
+            inventory.Add(equippedItem);
+            equippedItem.SetActive(false);
+            equippedItem = null;
 
-        interactionUI.SetActive(false);
-        ShowPopup("AXE STORED");
-    }
-
-    void ToggleInventory()
-    {
-        if (_equippedItem != null)
-        {
-            inventory.Add(_equippedItem);
-            Rigidbody rb = _equippedItem.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.isKinematic = false;
-                rb.useGravity = true;
-            }
-            _equippedItem.transform.SetParent(null);
-            _equippedItem.SetActive(false);
-            equippedWeapon = null;
-            _equippedItem = null;
             ShowPopup("AXE STORED");
         }
+        // Pull from inventory
         else if (inventory.Count > 0)
         {
             GameObject item = inventory[0];
             inventory.RemoveAt(0);
+
             item.SetActive(true);
             EquipItem(item);
+
             ShowPopup("AXE EQUIPPED");
         }
     }
@@ -167,21 +116,28 @@ public class PlayerInventory : MonoBehaviour
         popupLabel.text = message;
         popupText.SetActive(true);
 
-        CanvasGroup cg = popupText.GetComponent<CanvasGroup>();
-        if (cg == null) cg = popupText.AddComponent<CanvasGroup>();
+        CanvasGroup canvasGroup = popupText.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = popupText.AddComponent<CanvasGroup>();
 
-        cg.alpha = 0;
-        while (cg.alpha < 1)
+        canvasGroup.alpha = 0;
+
+        // Fade In
+        while (canvasGroup.alpha < 1)
         {
-            cg.alpha += Time.deltaTime * 3;
+            canvasGroup.alpha += Time.deltaTime * 3;
             yield return null;
         }
+
         yield return new WaitForSeconds(2f);
-        while (cg.alpha > 0)
+
+        // Fade Out
+        while (canvasGroup.alpha > 0)
         {
-            cg.alpha -= Time.deltaTime * 2;
+            canvasGroup.alpha -= Time.deltaTime * 2;
             yield return null;
         }
+
         popupText.SetActive(false);
     }
 }
