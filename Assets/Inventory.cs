@@ -16,8 +16,9 @@ public class PlayerInventory : MonoBehaviour
     public TMP_Text popupLabel;
 
     [Header("Weapon Hand Positioning")]
-    public Vector3 equipLocalPosition = new Vector3(0.08f, -0.12f, 0.35f);
-    public Vector3 equipLocalRotation = new Vector3(180f, 180f, -5f);
+    public Vector3 equipLocalPosition = new Vector3(-0.12f, 0.20f, 0.00f);     // ← old working values
+    public Vector3 equipLocalRotation = new Vector3(0f, 0f, 45f);              // ← old working values
+    // Feel free to change these in Inspector or here
 
     [Header("Equipped References")]
     public GameObject equippedItem => _equippedItem;
@@ -102,9 +103,21 @@ public class PlayerInventory : MonoBehaviour
         if (col != null)
             col.isTrigger = true;
 
-        item.transform.SetParent(rightHand);
+        // ───────────────────────────────────────────────
+        // This is the fixed sequence that actually works
+        // ───────────────────────────────────────────────
+
+        // Parent and immediately move to hand's position/rotation
+        item.transform.SetParent(rightHand, worldPositionStays: false);
+
+        // Clear any leftover local offset from pickup/world space
+        item.transform.localPosition = Vector3.zero;
+        item.transform.localRotation = Quaternion.identity;
+        item.transform.localScale = Vector3.one;
+
+        // NOW apply the desired offset you set in the Inspector
         item.transform.localPosition = equipLocalPosition;
-        item.transform.localEulerAngles = equipLocalRotation;
+        item.transform.localRotation = Quaternion.Euler(equipLocalRotation);
 
         interactionUI.SetActive(false);
         ShowPopup("AXE ACQUIRED");
@@ -116,12 +129,14 @@ public class PlayerInventory : MonoBehaviour
             pickup.isPickedUp = true;
 
         inventory.Add(item);
+
         Rigidbody rb = item.GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.isKinematic = false;
             rb.useGravity = true;
         }
+
         item.transform.SetParent(null);
         item.SetActive(false);
 
@@ -134,16 +149,19 @@ public class PlayerInventory : MonoBehaviour
         if (_equippedItem != null)
         {
             inventory.Add(_equippedItem);
+
             Rigidbody rb = _equippedItem.GetComponent<Rigidbody>();
             if (rb != null)
             {
                 rb.isKinematic = false;
                 rb.useGravity = true;
             }
+
             _equippedItem.transform.SetParent(null);
             _equippedItem.SetActive(false);
             equippedWeapon = null;
             _equippedItem = null;
+
             ShowPopup("AXE STORED");
         }
         else if (inventory.Count > 0)
@@ -176,12 +194,15 @@ public class PlayerInventory : MonoBehaviour
             cg.alpha += Time.deltaTime * 3;
             yield return null;
         }
+
         yield return new WaitForSeconds(2f);
+
         while (cg.alpha > 0)
         {
             cg.alpha -= Time.deltaTime * 2;
             yield return null;
         }
+
         popupText.SetActive(false);
     }
 }

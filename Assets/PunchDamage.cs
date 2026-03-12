@@ -1,18 +1,27 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-public class PunchDamage : MonoBehaviour
+public class UnarmedHit : MonoBehaviour
 {
-    public int damageAmount = 10;
+    [Header("Damage & Shake")]
+    public float damage = 15f;
+    public float shakeIntensity = 0.12f;
+    public float shakeDuration = 0.16f;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Enemy"))
         {
-            EnemyHealth enemy = other.GetComponent<EnemyHealth>();
-            if (enemy != null)
+            // Calculate direction from player → enemy
+            Vector3 direction = (other.transform.position - transform.position).normalized;
+
+            EnemyHealth health = other.GetComponent<EnemyHealth>();
+            if (health != null)
             {
-                enemy.TakeDamage(damageAmount);
+                health.TakeDamage(damage, direction);
             }
+
+            if (ScreenShake.Instance != null)
+                ScreenShake.Instance.Shake(shakeIntensity, shakeDuration);
         }
     }
 }
