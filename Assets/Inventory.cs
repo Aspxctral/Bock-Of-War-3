@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System.Linq;
+using UnityEngine.UI; // ← for Slider
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -16,17 +17,35 @@ public class PlayerInventory : MonoBehaviour
     public TMP_Text popupLabel;
 
     [Header("Weapon Hand Positioning")]
-    public Vector3 equipLocalPosition = new Vector3(-0.12f, 0.20f, 0.00f);     // ← old working values
-    public Vector3 equipLocalRotation = new Vector3(0f, 0f, 45f);              // ← old working values
-    // Feel free to change these in Inspector or here
+    public Vector3 equipLocalPosition = new Vector3(-0.12f, 0.20f, 0.00f);
+    public Vector3 equipLocalRotation = new Vector3(0f, 0f, 45f);
 
     [Header("Equipped References")]
     public GameObject equippedItem => _equippedItem;
     public WeaponDamage equippedWeapon { get; private set; }
 
+    [Header("Player Health")]
+    public float maxHealth = 100f;
+    public float currentHealth { get; private set; }
+
+    [Header("Health UI References")]
+    public Slider healthSlider;              // Drag your health slider here
+    public TMP_Text healthText;              // Drag your health text (e.g. "75/100") here
+
     private GameObject _equippedItem;
     private GameObject nearbyItem;
     public List<GameObject> inventory = new List<GameObject>();
+
+    void Start()
+    {
+        currentHealth = maxHealth;
+        if (healthSlider != null)
+        {
+            healthSlider.maxValue = maxHealth;
+            healthSlider.value = currentHealth;
+        }
+        UpdateHealthUI();
+    }
 
     void Update()
     {
@@ -103,19 +122,11 @@ public class PlayerInventory : MonoBehaviour
         if (col != null)
             col.isTrigger = true;
 
-        // ───────────────────────────────────────────────
-        // This is the fixed sequence that actually works
-        // ───────────────────────────────────────────────
-
-        // Parent and immediately move to hand's position/rotation
         item.transform.SetParent(rightHand, worldPositionStays: false);
-
-        // Clear any leftover local offset from pickup/world space
         item.transform.localPosition = Vector3.zero;
         item.transform.localRotation = Quaternion.identity;
         item.transform.localScale = Vector3.one;
 
-        // NOW apply the desired offset you set in the Inspector
         item.transform.localPosition = equipLocalPosition;
         item.transform.localRotation = Quaternion.Euler(equipLocalRotation);
 
@@ -204,5 +215,31 @@ public class PlayerInventory : MonoBehaviour
         }
 
         popupText.SetActive(false);
+    }
+
+    // HEALTH SYSTEM
+    public void TakeDamage(float amount)
+    {
+        currentHealth -= amount;
+        currentHealth = Mathf.Max(currentHealth, 0); // Prevent negative health
+
+        Debug.Log($"Player took {amount} damage! Health left: {currentHealth}/{maxHealth}");
+
+        UpdateHealthUI();
+
+        if (currentHealth <= 0)
+        {
+            Debug.Log("Player died!");
+            // Add death logic here (e.g., game over screen, respawn, etc.)
+        }
+    }
+
+    private void UpdateHealthUI()
+    {
+        if (healthSlider != null)
+            healthSlider.value = currentHealth;
+
+        if (healthText != null)
+            healthText.text = $"{Mathf.RoundToInt(currentHealth)} / {maxHealth}";
     }
 }

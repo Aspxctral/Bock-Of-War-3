@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyHealth : MonoBehaviour
@@ -7,8 +7,8 @@ public class EnemyHealth : MonoBehaviour
     private float currentHealth;
 
     [Header("Knockback")]
-    public float knockbackForce = 8f;      // ← tweak strength
-    public float knockbackDuration = 0.4f; // ← how long enemy is stunned/pushed
+    public float knockbackForce = 8f;
+    public float knockbackDuration = 0.4f;
 
     private Rigidbody rb;
     private NavMeshAgent agent;
@@ -22,7 +22,7 @@ public class EnemyHealth : MonoBehaviour
         anim = GetComponent<Animator>();
     }
 
-    // New overload so we can pass knockback direction
+    // Overload with knockback direction (called by WeaponDamage and UnarmedHit)
     public void TakeDamage(float amount, Vector3 hitDirection)
     {
         currentHealth -= amount;
@@ -33,12 +33,11 @@ public class EnemyHealth : MonoBehaviour
         // Knockback
         if (rb != null && hitDirection != Vector3.zero)
         {
-            if (agent != null) agent.enabled = false;   // pause AI
+            if (agent != null) agent.enabled = false;
 
             Vector3 force = hitDirection.normalized * knockbackForce;
             rb.AddForce(force, ForceMode.Impulse);
 
-            // Re-enable NavMeshAgent after short delay
             Invoke(nameof(ReEnableAgent), knockbackDuration);
         }
 
@@ -46,14 +45,14 @@ public class EnemyHealth : MonoBehaviour
             Destroy(gameObject);
     }
 
+    // Original overload (takes only amount) - for safety/compatibility
+    public void TakeDamage(float amount)
+    {
+        TakeDamage(amount, Vector3.zero); // No knockback if direction not provided
+    }
+
     private void ReEnableAgent()
     {
         if (agent != null) agent.enabled = true;
-    }
-
-    // Old version for safety (if anything calls it without direction)
-    public void TakeDamage(float amount)
-    {
-        TakeDamage(amount, Vector3.zero);
     }
 }
