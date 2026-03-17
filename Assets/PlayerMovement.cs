@@ -42,6 +42,12 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (cameraTransform == null)
+        {
+            Debug.LogError("CameraTransform not assigned!");
+            return;
+        }
+
         float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
 
         Vector3 camForward = cameraTransform.forward;
@@ -90,9 +96,10 @@ public class PlayerMovement : MonoBehaviour
         anim.SetBool("jump", true);
     }
 
-    // Ground detection
     void OnCollisionStay(Collision collision)
     {
+        if (collision == null || collision.gameObject == null) return;
+
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
@@ -102,6 +109,8 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionExit(Collision collision)
     {
+        if (collision == null || collision.gameObject == null) return;
+
         if (collision.gameObject.CompareTag("Ground"))
             isGrounded = false;
     }
