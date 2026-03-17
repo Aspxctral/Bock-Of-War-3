@@ -28,25 +28,23 @@ public class TitleMenu : MonoBehaviour
     // Call this from your Play button
     public void PlayGame()
     {
-        if (hasStarted) return;
+        if (hasStarted) return; // prevent double call
         hasStarted = true;
 
-        // Hide Title UI
+        // Disable all title UI
         titleUI.SetActive(false);
+        foreach (Transform child in titleUI.transform)
+            child.gameObject.SetActive(false);
 
-        // Show gameplay
-        gameUI.SetActive(true);
-        player.SetActive(true);
-
-        // Lock the cursor here (this will always run)
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-        // Stop background music if needed
+        // Stop background music
         if (bgMusic != null) bgMusic.Stop();
 
+        // Enable gameplay
+        gameUI.SetActive(true);
+        player.SetActive(true);
         Time.timeScale = 1f;
     }
+
     // Call this from your Quit button
     public void QuitGame()
     {
