@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
@@ -21,22 +20,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
-        // Force title screen if game started in another scene
-        if (SceneManager.GetActiveScene().name != "TitleScreen")
-        {
-            SceneManager.LoadScene("TitleScreen");
-            return;
-        }
-
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-
         anim = GetComponent<Animator>();
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     void Update()
@@ -50,38 +39,42 @@ public class PlayerMovement : MonoBehaviour
         HandleAnimations();
     }
 
-void FixedUpdate()
-{
-    if (cameraTransform == null) return;
-
-    float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
-
-    Vector3 camForward = cameraTransform.forward;
-    Vector3 camRight = cameraTransform.right;
-    camForward.y = 0;
-    camRight.y = 0;
-    camForward.Normalize();
-    camRight.Normalize();
-
-    Vector3 moveDir = camForward * moveZ + camRight * moveX;
-    Vector3 velocity = moveDir.normalized * speed;
-
-    rb.linearVelocity = new Vector3(velocity.x, rb.linearVelocity.y, velocity.z);
-
-    if (jumpRequested)
+    void FixedUpdate()
     {
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
-        TriggerJumpAnimation();
-        jumpRequested = false;
-        isGrounded = false;
-    }
+        if (cameraTransform == null)
+        {
+            Debug.LogError("CameraTransform not assigned!");
+            return;
+        }
 
-    if (moveDir.magnitude > 0.1f)
-    {
-        Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-        rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, 15f * Time.fixedDeltaTime));
+        float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
+
+        Vector3 camForward = cameraTransform.forward;
+        Vector3 camRight = cameraTransform.right;
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        Vector3 moveDir = camForward * moveZ + camRight * moveX;
+        Vector3 velocity = moveDir.normalized * speed;
+
+        rb.linearVelocity = new Vector3(velocity.x, rb.linearVelocity.y, velocity.z);
+
+        if (jumpRequested)
+        {
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+            TriggerJumpAnimation();
+            jumpRequested = false;
+            isGrounded = false;
+        }
+
+        if (moveDir.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
+            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, 15f * Time.fixedDeltaTime));
+        }
     }
-}
 
     void HandleAnimations()
     {
@@ -104,6 +97,8 @@ void FixedUpdate()
 
     void OnCollisionStay(Collision collision)
     {
+        if (collision == null || collision.gameObject == null) return;
+
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
@@ -113,6 +108,8 @@ void FixedUpdate()
 
     void OnCollisionExit(Collision collision)
     {
+        if (collision == null || collision.gameObject == null) return;
+
         if (collision.gameObject.CompareTag("Ground"))
             isGrounded = false;
     }
