@@ -1,4 +1,5 @@
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -7,12 +8,43 @@ public class PlayerHealth : MonoBehaviour
     private float currentHealth;
     private bool isDead = false;
 
+    [Header("UI")]
+    public Slider healthBar;
+    public Image fillImage;
+
+    [Header("Regen")]
+    public float regenDelay = 15f;     // seconds before regen starts
+    public float regenRate = 5f;       // health per second
+
+    private float lastDamageTime;
+
+    // References
+    private PlayerMovement movementScript;
+    private Fighter fighterScript;
+    private Animator animator;
 
     void Start()
     {
         currentHealth = maxHealth;
+        lastDamageTime = Time.time;
+
+        movementScript = GetComponent<PlayerMovement>();
+        fighterScript = GetComponent<Fighter>();
+        animator = GetComponent<Animator>();
+
+        if (healthBar != null)
+        {
+            healthBar.maxValue = maxHealth;
+            healthBar.value = currentHealth;
+        }
+
+        UpdateHealthUI();
     }
 
+    void Update()
+    {
+        HandleRegen();
+    }
 
     public void TakeDamage(float amount)
     {
@@ -21,11 +53,50 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= amount;
         currentHealth = Mathf.Max(currentHealth, 0f);
 
+        lastDamageTime = Time.time; // 🔥 reset regen timer
+
         Debug.Log($"Player took {amount} damage! Health left: {currentHealth}/{maxHealth}");
+
+        UpdateHealthUI();
 
         if (currentHealth <= 0)
         {
             Die();
+        }
+    }
+
+    void HandleRegen()
+    {
+        if (isDead) return;
+
+        // Check if enough time has passed since last damage
+        if (Time.time - lastDamageTime >= regenDelay)
+        {
+            if (currentHealth < maxHealth)
+            {
+                currentHealth += regenRate * Time.deltaTime;
+                currentHealth = Mathf.Min(currentHealth, maxHealth);
+
+                UpdateHealthUI();
+            }
+        }
+    }
+
+    void UpdateHealthUI()
+    {
+        if (healthBar != null)
+            healthBar.value = currentHealth;
+
+        if (fillImage != null)
+        {
+            float healthPercent = currentHealth / maxHealth;
+
+            if (healthPercent > 0.6f)
+                fillImage.color = Color.green;
+            else if (healthPercent > 0.3f)
+                fillImage.color = Color.yellow;
+            else
+                fillImage.color = Color.red;
         }
     }
 
@@ -34,11 +105,28 @@ public class PlayerHealth : MonoBehaviour
         isDead = true;
         Debug.Log("Player died!");
 
-        // disable player controls
-        GetComponent<CharacterController>().enabled = false;
+        if (movementScript != null)
+            movementScript.enabled = false;
 
-        // optional: disable fighter script
-        GetComponent<Fighter>().enabled = false;
+        if (fighterScript != null)
+            fighterScript.enabled = false;
+
+        if (animator != null)
+            animator.SetTrigger("Die");
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+        }
+
+        CapsuleCollider capsule = GetComponent<CapsuleCollider>();
+        if (capsule != null)
+        {
+            capsule.enabled = false;
+        }
     }
 
     public float CurrentHealth => currentHealth;
