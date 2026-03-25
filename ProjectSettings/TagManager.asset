@@ -8,6 +8,7 @@ TagManager:
   - Ground
   - AxeAttack
   - Enemy
+  - Fill
   layers:
   - Default
   - TransparentFX

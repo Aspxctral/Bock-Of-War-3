@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class QuestUIController : MonoBehaviour
 {
@@ -13,14 +14,18 @@ public class QuestUIController : MonoBehaviour
     public PlayerMovement playerMovement;
 
     [Header("Enemy Spawning")]
-    public GameObject enemyPrefab;   // your enemy
-    public Transform spawnPoint;     // where they spawn
+    public GameObject enemyPrefab;
+    public Transform spawnPoint;
     public int enemyCount = 3;
 
     private bool isUIOpen = false;
 
+    // 🔥 Track spawned enemies
+    private List<GameObject> activeEnemies = new List<GameObject>();
+
     void Update()
     {
+        // 🔹 Toggle Quest UI
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             isUIOpen = !isUIOpen;
@@ -32,8 +37,12 @@ public class QuestUIController : MonoBehaviour
             Cursor.lockState = isUIOpen ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = isUIOpen;
         }
+
+        // 🔥 Check if quest is complete
+        CheckQuestCompletion();
     }
 
+    // 🔥 Called when player clicks quest
     public void SelectQuest()
     {
         // Activate objective
@@ -60,6 +69,8 @@ public class QuestUIController : MonoBehaviour
     {
         if (enemyPrefab == null || spawnPoint == null) return;
 
+        activeEnemies.Clear();
+
         for (int i = 0; i < enemyCount; i++)
         {
             Vector3 randomOffset = new Vector3(
@@ -68,8 +79,34 @@ public class QuestUIController : MonoBehaviour
                 Random.Range(-3f, 3f)
             );
 
-            Instantiate(enemyPrefab, spawnPoint.position + randomOffset, Quaternion.identity);
+            GameObject enemy = Instantiate(
+                enemyPrefab,
+                spawnPoint.position + randomOffset,
+                Quaternion.identity
+            );
+
+            activeEnemies.Add(enemy);
         }
+    }
+
+    void CheckQuestCompletion()
+    {
+        if (activeEnemies.Count == 0) return;
+
+        // Remove dead enemies
+        activeEnemies.RemoveAll(enemy => enemy == null);
+
+        if (activeEnemies.Count == 0)
+        {
+            CompleteQuest();
+        }
+    }
+
+    void CompleteQuest()
+    {
+        Debug.Log("QUEST COMPLETE 🔥");
+
+        DeactivateObjective();
     }
 
     public void DeactivateObjective()
