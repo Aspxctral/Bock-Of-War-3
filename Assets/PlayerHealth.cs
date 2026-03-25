@@ -30,7 +30,6 @@ public class PlayerHealth : MonoBehaviour
 
         movementScript = GetComponent<PlayerMovement>();
         fighterScript = GetComponent<Fighter>();
-        animator = GetComponent<Animator>();
 
         if (healthBar != null)
         {
@@ -110,9 +109,6 @@ public class PlayerHealth : MonoBehaviour
 
         if (fighterScript != null)
             fighterScript.enabled = false;
-
-        if (animator != null)
-            animator.SetTrigger("Die");
 
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
