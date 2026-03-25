@@ -39,7 +39,13 @@ public class EnemyAI : MonoBehaviour
         lastPosition = transform.position;
 
         if (patrolPoints.Length > 0)
-            agent.SetDestination(patrolPoints[0].position);
+        {
+            // 🔥 pick random starting point
+            patrolIndex = Random.Range(0, patrolPoints.Length);
+
+            // move to that point
+            agent.SetDestination(patrolPoints[patrolIndex].position);
+        }
     }
 
     void Update()
@@ -97,9 +103,11 @@ public class EnemyAI : MonoBehaviour
 
         isAttacking = false;
     }
-
     void Patrol()
     {
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+            return; // 🔥 prevents error
+
         isChasing = false;
         agent.speed = patrolSpeed;
 
@@ -108,9 +116,10 @@ public class EnemyAI : MonoBehaviour
         if (!agent.pathPending && agent.remainingDistance < 0.2f)
         {
             waitTimer += Time.deltaTime;
+
             if (waitTimer >= waitTime)
             {
-                patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
+                patrolIndex = Random.Range(0, patrolPoints.Length); // 🔥 random patrol
                 agent.SetDestination(patrolPoints[patrolIndex].position);
                 waitTimer = 0f;
             }

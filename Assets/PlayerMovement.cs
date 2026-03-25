@@ -11,6 +11,9 @@ public class PlayerMovement : MonoBehaviour
     [Header("Camera")]
     public Transform cameraTransform;
 
+    [Header("Movement Control")]
+    private bool canMove = true; // freeze movement when UI open
+
     private Rigidbody rb;
     private Animator anim;
     private float moveX;
@@ -25,11 +28,12 @@ public class PlayerMovement : MonoBehaviour
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         anim = GetComponent<Animator>();
-
     }
 
     void Update()
     {
+        if (!canMove) return; // freeze movement when disabled
+
         moveX = Input.GetAxisRaw("Horizontal");
         moveZ = Input.GetAxisRaw("Vertical");
 
@@ -41,6 +45,8 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (!canMove) return; // freeze physics when disabled
+
         if (cameraTransform == null)
         {
             Debug.LogError("CameraTransform not assigned!");
@@ -112,5 +118,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Ground"))
             isGrounded = false;
+    }
+
+    // ✅ Public method to freeze/unfreeze movement
+    public void SetMovementActive(bool active)
+    {
+        canMove = active;
     }
 }
