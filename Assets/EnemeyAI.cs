@@ -26,24 +26,19 @@ public class EnemyAI : MonoBehaviour
     private float lastAttackTime;
     private bool isAttacking;
 
-    // For animation fallback when agent velocity isn't reliable
+    // Manual speed tracking for reliable animation
     private Vector3 lastPosition;
-    private float manualSpeed;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
         agent.speed = patrolSpeed;
-
         lastPosition = transform.position;
 
         if (patrolPoints.Length > 0)
         {
-            // 🔥 pick random starting point
             patrolIndex = Random.Range(0, patrolPoints.Length);
-
-            // move to that point
             agent.SetDestination(patrolPoints[patrolIndex].position);
         }
     }
@@ -78,11 +73,10 @@ public class EnemyAI : MonoBehaviour
         if (agent.isOnNavMesh)
             agent.ResetPath();
 
-        agent.enabled = false;
-
+        agent.enabled = false;           // Pause agent during kick
         anim.SetTrigger("TornadoKick");
 
-        Invoke(nameof(EndAttack), 1.8f); // ← match your kick animation length
+        Invoke(nameof(EndAttack), 1.8f); // Adjust this to match your kick animation length
     }
 
     void EndAttack()
@@ -91,23 +85,18 @@ public class EnemyAI : MonoBehaviour
         {
             agent.enabled = true;
 
-            // Force re-target to kickstart velocity
+            // Force re-target so velocity updates
             if (isChasing && player != null)
                 agent.SetDestination(player.position);
             else if (patrolPoints.Length > 0)
                 agent.SetDestination(patrolPoints[patrolIndex].position);
-
-            // Small nudge to wake velocity
-            agent.velocity = Vector3.zero;
         }
 
         isAttacking = false;
     }
+
     void Patrol()
     {
-        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
-            return; // 🔥 prevents error
-
         isChasing = false;
         agent.speed = patrolSpeed;
 
@@ -116,10 +105,9 @@ public class EnemyAI : MonoBehaviour
         if (!agent.pathPending && agent.remainingDistance < 0.2f)
         {
             waitTimer += Time.deltaTime;
-
             if (waitTimer >= waitTime)
             {
-                patrolIndex = Random.Range(0, patrolPoints.Length); // 🔥 random patrol
+                patrolIndex = Random.Range(0, patrolPoints.Length);
                 agent.SetDestination(patrolPoints[patrolIndex].position);
                 waitTimer = 0f;
             }
@@ -148,14 +136,14 @@ public class EnemyAI : MonoBehaviour
 
     void HandleAnimations()
     {
-        // Primary: agent velocity when active
         float speed = 0f;
+
         if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
             speed = agent.velocity.magnitude;
         }
 
-        // Fallback: manual speed calculation (reliable after agent re-enable)
+        // Manual fallback when agent velocity is unreliable (after re-enable)
         if (speed < 0.1f && !isAttacking)
         {
             Vector3 delta = transform.position - lastPosition;
@@ -164,8 +152,8 @@ public class EnemyAI : MonoBehaviour
 
         lastPosition = transform.position;
 
-        bool walking = speed > 0.3f && !isChasing && !isAttacking; // lowered threshold to catch small speeds
-        bool running = speed > 0.3f && isChasing && !isAttacking;
+        bool walking = speed > 0.4f && !isChasing && !isAttacking;
+        bool running = speed > 0.8f && isChasing && !isAttacking;   // higher threshold for running
 
         anim.SetBool("isWalking", walking);
         anim.SetBool("isRunning", running);

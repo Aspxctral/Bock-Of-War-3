@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health")]
-    public float maxHealth = 100f;
+    public float MaxHealth = 100f;
     private float currentHealth;
     private bool isDead = false;
 
@@ -13,9 +13,8 @@ public class PlayerHealth : MonoBehaviour
     public Image fillImage;
 
     [Header("Regen")]
-    public float regenDelay = 15f;     // seconds before regen starts
-    public float regenRate = 5f;       // health per second
-
+    public float regenDelay = 15f; // seconds before regen starts
+    public float regenRate = 5f;   // health per second
     private float lastDamageTime;
 
     // References
@@ -25,7 +24,7 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
-        currentHealth = maxHealth;
+        currentHealth = MaxHealth;
         lastDamageTime = Time.time;
 
         movementScript = GetComponent<PlayerMovement>();
@@ -33,7 +32,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (healthBar != null)
         {
-            healthBar.maxValue = maxHealth;
+            healthBar.maxValue = MaxHealth;
             healthBar.value = currentHealth;
         }
 
@@ -54,7 +53,7 @@ public class PlayerHealth : MonoBehaviour
 
         lastDamageTime = Time.time; // 🔥 reset regen timer
 
-        Debug.Log($"Player took {amount} damage! Health left: {currentHealth}/{maxHealth}");
+        Debug.Log($"Player took {amount} damage! Health left: {currentHealth}/{MaxHealth}");
 
         UpdateHealthUI();
 
@@ -71,10 +70,10 @@ public class PlayerHealth : MonoBehaviour
         // Check if enough time has passed since last damage
         if (Time.time - lastDamageTime >= regenDelay)
         {
-            if (currentHealth < maxHealth)
+            if (currentHealth < MaxHealth)
             {
                 currentHealth += regenRate * Time.deltaTime;
-                currentHealth = Mathf.Min(currentHealth, maxHealth);
+                currentHealth = Mathf.Min(currentHealth, MaxHealth);
 
                 UpdateHealthUI();
             }
@@ -88,7 +87,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (fillImage != null)
         {
-            float healthPercent = currentHealth / maxHealth;
+            float healthPercent = currentHealth / MaxHealth;
 
             if (healthPercent > 0.6f)
                 fillImage.color = Color.green;
@@ -102,6 +101,7 @@ public class PlayerHealth : MonoBehaviour
     private void Die()
     {
         isDead = true;
+
         Debug.Log("Player died!");
 
         if (movementScript != null)
@@ -123,6 +123,8 @@ public class PlayerHealth : MonoBehaviour
         {
             capsule.enabled = false;
         }
+
+        Destroy(gameObject);
     }
 
     public float CurrentHealth => currentHealth;
