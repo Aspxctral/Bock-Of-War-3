@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
@@ -8,11 +9,19 @@ public class PlayerMovement : MonoBehaviour
     public float sprintSpeed = 7f;
     public float jumpForce = 7f;
 
+    [Header("Sprint Scaling")]
+    public float baseSprintSpeed = 7f;
+    public float sprintIncreasePerLevel = 10f;
+    public float maxSprintCap = 100f;
+
+    [Header("UI")]
+    public Slider sprintSlider;
+
     [Header("Camera")]
     public Transform cameraTransform;
 
     [Header("Movement Control")]
-    private bool canMove = true; // freeze movement when UI open
+    private bool canMove = true;
 
     private Rigidbody rb;
     private Animator anim;
@@ -27,12 +36,22 @@ public class PlayerMovement : MonoBehaviour
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
         anim = GetComponent<Animator>();
+
+        sprintSpeed = baseSprintSpeed;
+
+        // Setup slider
+        if (sprintSlider != null)
+        {
+            sprintSlider.maxValue = maxSprintCap;
+            sprintSlider.value = sprintSpeed;
+        }
     }
 
     void Update()
     {
-        if (!canMove) return; // freeze movement when disabled
+        if (!canMove) return;
 
         moveX = Input.GetAxisRaw("Horizontal");
         moveZ = Input.GetAxisRaw("Vertical");
@@ -45,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!canMove) return; // freeze physics when disabled
+        if (!canMove) return;
 
         if (cameraTransform == null)
         {
@@ -79,6 +98,27 @@ public class PlayerMovement : MonoBehaviour
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDir);
             rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, 15f * Time.fixedDeltaTime));
+        }
+
+        UpdateSprintUI();
+    }
+
+    // 🔥 THIS IS THE IMPORTANT PART
+    public void OnLevelUp(int level)
+    {
+        float newSpeed = baseSprintSpeed + (level - 1) * sprintIncreasePerLevel;
+        sprintSpeed = Mathf.Min(newSpeed, maxSprintCap);
+
+        UpdateSprintUI();
+
+        Debug.Log("Sprint Speed Updated: " + sprintSpeed);
+    }
+
+    void UpdateSprintUI()
+    {
+        if (sprintSlider != null)
+        {
+            sprintSlider.value = sprintSpeed;
         }
     }
 
@@ -120,7 +160,6 @@ public class PlayerMovement : MonoBehaviour
             isGrounded = false;
     }
 
-    // ✅ Public method to freeze/unfreeze movement
     public void SetMovementActive(bool active)
     {
         canMove = active;

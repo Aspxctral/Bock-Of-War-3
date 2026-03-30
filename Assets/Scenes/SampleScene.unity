@@ -15386,6 +15386,10 @@ MonoBehaviour:
   walkSpeed: 4
   sprintSpeed: 16.57
   jumpForce: 8
+  baseSprintSpeed: 7
+  sprintIncreasePerLevel: 10
+  maxSprintCap: 100
+  sprintSlider: {fileID: 0}
   cameraTransform: {fileID: 1232950583}
 --- !u!114 &709697432
 MonoBehaviour:
@@ -23867,7 +23871,7 @@ RectTransform:
   m_GameObject: {fileID: 1093854464}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.98817, y: 1, z: 1}
+  m_LocalScale: {x: 1.0133684, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 533436401}

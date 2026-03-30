@@ -11,6 +11,17 @@ public class PlayerStats : MonoBehaviour
     public int coins = 0;
 
     public LevelUpPopup levelUpPopup;
+    private PlayerHealth playerHealth;
+
+void Start()
+{
+    playerHealth = FindFirstObjectByType<PlayerHealth>();
+
+    if (playerHealth != null)
+    {
+        playerHealth.OnLevelUp(level);
+    }
+}
 
     void Awake()
     {
@@ -35,20 +46,28 @@ public class PlayerStats : MonoBehaviour
     public void AddCoins(int amount)
     {
         coins += amount;
+        CheckLevelUp();
     }
 
-    void CheckLevelUp()
+void CheckLevelUp()
+{
+    while (currentXP >= xpToNextLevel)
     {
-        while (currentXP >= xpToNextLevel)
+        currentXP -= xpToNextLevel;
+        level++;
+        xpToNextLevel = Mathf.FloorToInt(xpToNextLevel * 1.2f);
+
+        Debug.Log("Leveled up to: " + level);
+
+        if (playerHealth != null)
         {
-            currentXP -= xpToNextLevel;
-            level++;
-            xpToNextLevel = Mathf.FloorToInt(xpToNextLevel * 1.2f); // increase XP needed per level
-            if (levelUpPopup != null)
-                levelUpPopup.ShowPopup("Level Up!");
+            playerHealth.OnLevelUp(level);
         }
 
+           if (levelUpPopup != null)
+                levelUpPopup.ShowPopup("Level Up!");
     }
+}
 
     // NEW: returns the total XP required to reach all previous levels
     public int GetXPRequiredForPreviousLevels()

@@ -98,6 +98,22 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+public void OnLevelUp(int level)
+{
+    Debug.Log("LEVEL UP CALLED: " + level);
+
+    MaxHealth = 100f + (level - 1) * 10f;
+    currentHealth = MaxHealth;
+
+    if (healthBar != null)
+    {
+        healthBar.maxValue = MaxHealth;
+        healthBar.value = currentHealth;
+    }
+
+    UpdateHealthUI();
+}
+
     private void Die()
     {
         isDead = true;
