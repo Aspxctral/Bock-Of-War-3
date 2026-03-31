@@ -3,7 +3,7 @@ using UnityEngine;
 public class WeaponDamage : MonoBehaviour
 {
     [Header("Damage Settings")]
-    public int damageAmount = 25;
+    public int baseDamage = 25;
     public Collider damageCollider;
 
     [Header("Screen Shake")]
@@ -36,15 +36,19 @@ public class WeaponDamage : MonoBehaviour
         if (other.CompareTag("Enemy"))
         {
             Vector3 direction = (other.transform.position - transform.position).normalized;
-
             EnemyHealth enemy = other.GetComponent<EnemyHealth>();
             if (enemy != null)
             {
-                enemy.TakeDamage(damageAmount, direction);
+                // Damage scales with strength
+                int damage = baseDamage + Mathf.RoundToInt(PlayerStats.Instance.strength * 0.02f);
+                enemy.TakeDamage(damage, direction);
 
                 if (ScreenShake.Instance != null)
                     ScreenShake.Instance.Shake(shakeIntensity, shakeDuration);
             }
+
+            // Increase strength on axe hit
+            PlayerStats.Instance.AddStrength(20);
         }
     }
 }

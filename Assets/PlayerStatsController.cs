@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class PlayerStats : MonoBehaviour
 {
@@ -6,22 +8,19 @@ public class PlayerStats : MonoBehaviour
 
     [Header("Player Stats")]
     public int level = 1;
-    public int currentXP = 0;          // cumulative XP
-    public int xpToNextLevel = 100;    // total XP required for next level
+    public int currentXP = 0;
+    public int xpToNextLevel = 100;
     public int coins = 0;
+    public int strength = 0;           // NEW: unified strength
+    public int maxStrength = 1000;
+
+    [Header("UI")]
+    public Slider strengthSlider;
+    public TextMeshProUGUI strengthText;
 
     public LevelUpPopup levelUpPopup;
     private PlayerHealth playerHealth;
-
-void Start()
-{
-    playerHealth = FindFirstObjectByType<PlayerHealth>();
-
-    if (playerHealth != null)
-    {
-        playerHealth.OnLevelUp(level);
-    }
-}
+    private PlayerMovement playerMovement;
 
     void Awake()
     {
@@ -36,7 +35,17 @@ void Start()
         }
     }
 
-    // Call this when player earns XP
+    void Start()
+    {
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
+        playerMovement = FindFirstObjectByType<PlayerMovement>();
+
+        if (playerHealth != null)
+            playerHealth.OnLevelUp(level);
+
+        UpdateStrengthUI();
+    }
+
     public void AddXP(int amount)
     {
         currentXP += amount;
@@ -49,31 +58,47 @@ void Start()
         CheckLevelUp();
     }
 
-void CheckLevelUp()
-{
-    while (currentXP >= xpToNextLevel)
+    public void AddStrength(int amount)
     {
-        currentXP -= xpToNextLevel;
-        level++;
-        xpToNextLevel = Mathf.FloorToInt(xpToNextLevel * 1.2f);
-
-        Debug.Log("Leveled up to: " + level);
-
-        if (playerHealth != null)
-        {
-            playerHealth.OnLevelUp(level);
-        }
-
-           if (levelUpPopup != null)
-                levelUpPopup.ShowPopup("Level Up!");
+        strength = Mathf.Clamp(strength + amount, 0, maxStrength);
+        UpdateStrengthUI();
+        Debug.Log("Strength: " + strength);
     }
-}
 
-    // NEW: returns the total XP required to reach all previous levels
+    void CheckLevelUp()
+    {
+        while (currentXP >= xpToNextLevel)
+        {
+            currentXP -= xpToNextLevel;
+            level++;
+            xpToNextLevel = Mathf.FloorToInt(xpToNextLevel * 1.2f);
+
+            Debug.Log("Leveled up to: " + level);
+
+            if (playerHealth != null)
+                playerHealth.OnLevelUp(level);
+
+            if (levelUpPopup != null)
+                levelUpPopup.ShowPopup("Level Up!");
+
+            if (playerMovement != null)
+                playerMovement.OnLevelUp(level);
+        }
+    }
+
+    void UpdateStrengthUI()
+    {
+        if (strengthSlider != null)
+            strengthSlider.value = strength;
+
+        if (strengthText != null)
+            strengthText.text = $"STR: {strength} / {maxStrength}";
+    }
+
     public int GetXPRequiredForPreviousLevels()
     {
         int xp = 0;
-        int tempXP = 100; // starting XP requirement for level 1 → 2
+        int tempXP = 100;
 
         for (int i = 1; i < level; i++)
         {

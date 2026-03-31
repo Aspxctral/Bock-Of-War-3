@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
@@ -14,8 +15,16 @@ public class PlayerMovement : MonoBehaviour
     public float sprintIncreasePerLevel = 10f;
     public float maxSprintCap = 100f;
 
+    [Header("Stamina Scaling")]
+    public float baseStamina = 10f;
+    public float staminaIncreasePerLevel = 5f;
+
     [Header("UI")]
     public Slider sprintSlider;
+    public TextMeshProUGUI sprintText;
+    public TextMeshProUGUI staminaText;
+    public Slider staminaSlider;
+    public Slider staminaSliderGame;
 
     [Header("Camera")]
     public Transform cameraTransform;
@@ -30,6 +39,13 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded;
     private bool jumpRequested;
 
+    [Header("Stamina")]
+    public float maxStamina;
+    public float currentStamina;
+    public float staminaDrainRate = 1f;
+    public float staminaRegenRate = 1f;
+    private bool isSprinting;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -41,12 +57,10 @@ public class PlayerMovement : MonoBehaviour
 
         sprintSpeed = baseSprintSpeed;
 
-        // Setup slider
-        if (sprintSlider != null)
-        {
-            sprintSlider.maxValue = maxSprintCap;
-            sprintSlider.value = sprintSpeed;
-        }
+        maxStamina = baseStamina;
+        currentStamina = maxStamina;
+
+        UpdateSprintUI();
     }
 
     void Update()
@@ -72,7 +86,22 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
+        bool sprintInput = Input.GetKey(KeyCode.LeftShift) && moveZ > 0;
+
+        if (sprintInput && currentStamina > 0f)
+        {
+            isSprinting = true;
+            currentStamina -= staminaDrainRate * Time.fixedDeltaTime;
+        }
+        else
+        {
+            isSprinting = false;
+            currentStamina += staminaRegenRate * Time.fixedDeltaTime;
+        }
+
+        currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+
+        float speed = isSprinting ? sprintSpeed : walkSpeed;
 
         Vector3 camForward = cameraTransform.forward;
         Vector3 camRight = cameraTransform.right;
@@ -103,23 +132,45 @@ public class PlayerMovement : MonoBehaviour
         UpdateSprintUI();
     }
 
-    // 🔥 THIS IS THE IMPORTANT PART
+    // 🔥 LEVEL UP HANDLER
     public void OnLevelUp(int level)
     {
-        float newSpeed = baseSprintSpeed + (level - 1) * sprintIncreasePerLevel;
-        sprintSpeed = Mathf.Min(newSpeed, maxSprintCap);
+        // Speed scaling
+        sprintSpeed = Mathf.Min(baseSprintSpeed + (level - 1) * sprintIncreasePerLevel, maxSprintCap);
+
+        // Stamina scaling (+5 per level)
+        maxStamina = baseStamina + (level - 1) * staminaIncreasePerLevel;
+
+        // Refill stamina
+        currentStamina = maxStamina;
 
         UpdateSprintUI();
 
-        Debug.Log("Sprint Speed Updated: " + sprintSpeed);
+        Debug.Log($"Level {level} → Speed: {sprintSpeed} | Stamina: {maxStamina}");
     }
 
     void UpdateSprintUI()
     {
         if (sprintSlider != null)
-        {
             sprintSlider.value = sprintSpeed;
+
+        if (sprintText != null)
+            sprintText.text = $"Speed: {Mathf.RoundToInt(sprintSpeed)} / {Mathf.RoundToInt(maxSprintCap)}";
+
+        if (staminaSlider != null)
+        {
+            staminaSlider.maxValue = maxStamina;
+            staminaSlider.value = currentStamina;
         }
+
+        if (staminaSliderGame != null)
+        {
+            staminaSliderGame.maxValue = maxStamina;
+            staminaSliderGame.value = currentStamina;
+        }
+
+        if (staminaText != null)
+            staminaText.text = $"Stamina: {Mathf.CeilToInt(currentStamina)} / {Mathf.CeilToInt(maxStamina)}";
     }
 
     void HandleAnimations()
@@ -143,8 +194,6 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionStay(Collision collision)
     {
-        if (collision == null || collision.gameObject == null) return;
-
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
@@ -154,8 +203,6 @@ public class PlayerMovement : MonoBehaviour
 
     void OnCollisionExit(Collision collision)
     {
-        if (collision == null || collision.gameObject == null) return;
-
         if (collision.gameObject.CompareTag("Ground"))
             isGrounded = false;
     }

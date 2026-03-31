@@ -1,36 +1,67 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class QuestUIController : MonoBehaviour
 {
     [Header("UI")]
     public GameObject questPanel;
 
-    [Header("Objective")]
-    public GameObject worldObjective;
-    public GameObject compassMarker;
+    [Header("World Objectives")]
+    public GameObject worldObjective1;
+    public GameObject worldObjective2;
+    public GameObject worldObjective3;
 
-    [Header("Player Movement")]
+    [Header("Compass")]
+    public CompassBar compassBar;                 // ← Drag your CompassBar here
+
+    [Header("Player")]
     public PlayerMovement playerMovement;
 
-    [Header("Enemy Spawning")]
-    public GameObject enemyPrefab;
-    public Transform spawnPoint;
-    public int enemyCount = 3;
+    [Header("Enemy Controllers")]
+    public QuestEnemyController enemyForQuest1;
+    public QuestEnemyController enemyForQuest2;
+    public QuestEnemyController enemyForQuest3;
 
     [Header("Quest Rewards")]
     public int questXPReward = 100;
     public int questCoinReward = 50;
-    public QuestRewardDisplay rewardDisplay; // Reference to reward UI
+    public QuestRewardDisplay rewardDisplay;
+
+    [Header("Quest Buttons")]
+    public Button questButton1;
+    public Button questButton2;
+    public Button questButton3;
 
     private bool isUIOpen = false;
-
-    // 🔥 Track enemies
     private List<GameObject> activeEnemies = new List<GameObject>();
+    private int currentQuestIndex = 0;
+    private GameObject currentWorldObjective;
+
+    // Quest progression tracking
+    private bool quest1Completed = false;
+    private bool quest2Completed = false;
+
+    void Start()
+    {
+        // Initially lock Quest 2 and 3
+        if (questButton2 != null) questButton2.interactable = false;
+        if (questButton3 != null) questButton3.interactable = false;
+
+        // Assign button listeners
+        if (questButton1 != null) questButton1.onClick.AddListener(() => StartQuest(1));
+        if (questButton2 != null) questButton2.onClick.AddListener(() => StartQuest(2));
+        if (questButton3 != null) questButton3.onClick.AddListener(() => StartQuest(3));
+
+        // Hide all objectives at start
+        if (worldObjective1 != null) worldObjective1.SetActive(false);
+        if (worldObjective2 != null) worldObjective2.SetActive(false);
+        if (worldObjective3 != null) worldObjective3.SetActive(false);
+        if (compassBar != null) compassBar.ClearObjective();
+    }
 
     void Update()
     {
-        // 🔹 Toggle Quest UI
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             isUIOpen = !isUIOpen;
@@ -43,94 +74,114 @@ public class QuestUIController : MonoBehaviour
             Cursor.visible = isUIOpen;
         }
 
-        // 🔥 Check quest completion
         CheckQuestCompletion();
     }
 
-    // 🔥 Called when player selects quest
-    public void SelectQuest()
+    public void StartQuest(int questNumber)
     {
-        // Activate objective
-        if (worldObjective != null) worldObjective.SetActive(true);
-        if (compassMarker != null) compassMarker.SetActive(true);
+        // Prevent starting locked quests
+        if (questNumber == 2 && !quest1Completed) return;
+        if (questNumber == 3 && !quest2Completed) return;
 
-        // Spawn enemies
-        SpawnEnemies();
+        currentQuestIndex = questNumber;
+        activeEnemies.Clear();
+
+        GameObject objective = null;
+        QuestEnemyController enemySlot = null;
+
+        switch (questNumber)
+        {
+            case 1:
+                objective = worldObjective1;
+                enemySlot = enemyForQuest1;
+                break;
+            case 2:
+                objective = worldObjective2;
+                enemySlot = enemyForQuest2;
+                break;
+            case 3:
+                objective = worldObjective3;
+                enemySlot = enemyForQuest3;
+                break;
+        }
+
+        // Activate the correct objective
+        if (objective != null)
+        {
+            objective.SetActive(true);
+            currentWorldObjective = objective;
+        }
+
+        // Tell compass to track this objective
+        if (compassBar != null)
+            compassBar.SetActiveObjective(questNumber);
+
+        // Spawn enemies for this quest
+        if (enemySlot != null)
+        {
+            List<GameObject> spawned = enemySlot.ActivateEnemies();
+            if (spawned != null && spawned.Count > 0)
+                activeEnemies.AddRange(spawned);
+        }
 
         // Close UI
         questPanel.SetActive(false);
         isUIOpen = false;
-
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         if (playerMovement != null)
             playerMovement.SetMovementActive(true);
 
-        Debug.Log("Quest Started! Enemies Spawned.");
-    }
-
-    void SpawnEnemies()
-    {
-        if (enemyPrefab == null || spawnPoint == null) return;
-
-        activeEnemies.Clear();
-
-        for (int i = 0; i < enemyCount; i++)
-        {
-            Vector3 randomOffset = new Vector3(
-                Random.Range(-3f, 3f),
-                0,
-                Random.Range(-3f, 3f)
-            );
-
-            GameObject enemy = Instantiate(
-                enemyPrefab,
-                spawnPoint.position + randomOffset,
-                Quaternion.identity
-            );
-
-            activeEnemies.Add(enemy);
-        }
+        Debug.Log($"Quest {questNumber} Started! Objective activated.");
     }
 
     void CheckQuestCompletion()
     {
         if (activeEnemies.Count == 0) return;
 
-        // Remove dead enemies
         activeEnemies.RemoveAll(enemy => enemy == null);
 
         if (activeEnemies.Count == 0)
         {
-            CompleteQuest();
+            CompleteCurrentQuest();
         }
     }
 
-    void CompleteQuest()
+    void CompleteCurrentQuest()
     {
-        Debug.Log("QUEST COMPLETE 🔥");
+        Debug.Log($"Quest {currentQuestIndex} Completed!");
 
-        // 1️⃣ Update player stats
+        // Give rewards
         if (PlayerStats.Instance != null)
         {
             PlayerStats.Instance.AddXP(questXPReward);
             PlayerStats.Instance.AddCoins(questCoinReward);
         }
 
-        // 2️⃣ Show reward UI
         if (rewardDisplay != null)
-        {
             rewardDisplay.ShowReward(questXPReward, questCoinReward);
+
+        // Deactivate current objective
+        if (currentWorldObjective != null)
+            currentWorldObjective.SetActive(false);
+
+        if (compassBar != null)
+            compassBar.ClearObjective();
+
+        // Unlock next quest
+        if (currentQuestIndex == 1)
+        {
+            quest1Completed = true;
+            if (questButton2 != null) questButton2.interactable = true;
+        }
+        else if (currentQuestIndex == 2)
+        {
+            quest2Completed = true;
+            if (questButton3 != null) questButton3.interactable = true;
         }
 
-        // 3️⃣ Deactivate objective
-        DeactivateObjective();
-    }
-
-    public void DeactivateObjective()
-    {
-        if (worldObjective != null) worldObjective.SetActive(false);
-        if (compassMarker != null) compassMarker.SetActive(false);
+        activeEnemies.Clear();
+        currentWorldObjective = null;
     }
 }
