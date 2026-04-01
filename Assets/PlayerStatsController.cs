@@ -11,7 +11,9 @@ public class PlayerStats : MonoBehaviour
     public int currentXP = 0;
     public int xpToNextLevel = 100;
     public int coins = 0;
-    public int strength = 0;           // NEW: unified strength
+
+    [Header("Strength")]
+    public int strength = 0;
     public int maxStrength = 1000;
 
     [Header("UI")]
@@ -19,8 +21,8 @@ public class PlayerStats : MonoBehaviour
     public TextMeshProUGUI strengthText;
 
     public LevelUpPopup levelUpPopup;
+
     private PlayerHealth playerHealth;
-    private PlayerMovement playerMovement;
 
     void Awake()
     {
@@ -38,10 +40,9 @@ public class PlayerStats : MonoBehaviour
     void Start()
     {
         playerHealth = FindFirstObjectByType<PlayerHealth>();
-        playerMovement = FindFirstObjectByType<PlayerMovement>();
 
         if (playerHealth != null)
-            playerHealth.OnLevelUp(level);
+            playerHealth.OnLevelUp(level);   // Call level up on health
 
         UpdateStrengthUI();
     }
@@ -62,7 +63,7 @@ public class PlayerStats : MonoBehaviour
     {
         strength = Mathf.Clamp(strength + amount, 0, maxStrength);
         UpdateStrengthUI();
-        Debug.Log("Strength: " + strength);
+        Debug.Log("Strength increased to: " + strength);
     }
 
     void CheckLevelUp()
@@ -75,14 +76,15 @@ public class PlayerStats : MonoBehaviour
 
             Debug.Log("Leveled up to: " + level);
 
+            // Call OnLevelUp on PlayerHealth if it exists
             if (playerHealth != null)
                 playerHealth.OnLevelUp(level);
 
+            // Show level up popup if assigned
             if (levelUpPopup != null)
                 levelUpPopup.ShowPopup("Level Up!");
 
-            if (playerMovement != null)
-                playerMovement.OnLevelUp(level);
+            UpdateStrengthUI();
         }
     }
 

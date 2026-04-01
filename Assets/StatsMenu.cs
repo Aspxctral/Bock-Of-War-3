@@ -22,7 +22,7 @@ public class SimpleStatsMenu : MonoBehaviour
             statsPanel.SetActive(false);
 
         // Get reference to PlayerHealth
-        playerHealth = FindObjectOfType<PlayerHealth>();
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
     }
 
     void Update()
@@ -72,7 +72,7 @@ public class SimpleStatsMenu : MonoBehaviour
 
         if (healthText != null)
         {
-            healthText.text = $"{Mathf.RoundToInt(playerHealth.CurrentHealth)} / {Mathf.RoundToInt(playerHealth.MaxHealth)}";
+            healthText.text = $"{Mathf.RoundToInt(playerHealth.CurrentHealth)} / {Mathf.RoundToInt(playerHealth.maxHealth)}";
         }
     }
 }

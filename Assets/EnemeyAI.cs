@@ -6,7 +6,7 @@ public class EnemyAI : MonoBehaviour
     public Transform player;
 
     [Header("Attack")]
-    public float attackRange = 1.8f;
+    public float attackRange = 1.8f;        // Distance to start tornado kick
     public float attackCooldown = 1.8f;
 
     [Header("Patrol")]
@@ -17,6 +17,7 @@ public class EnemyAI : MonoBehaviour
     [Header("Chase")]
     public float chaseSpeed = 4.5f;
     public float detectionRadius = 8f;
+    public float stoppingDistance = 1.2f;   // ← New: how close to stop before kicking
 
     private NavMeshAgent agent;
     private Animator anim;
@@ -26,7 +27,6 @@ public class EnemyAI : MonoBehaviour
     private float lastAttackTime;
     private bool isAttacking;
 
-    // Manual speed tracking for reliable animation
     private Vector3 lastPosition;
 
     void Start()
@@ -76,7 +76,7 @@ public class EnemyAI : MonoBehaviour
         agent.enabled = false;           // Pause agent during kick
         anim.SetTrigger("TornadoKick");
 
-        Invoke(nameof(EndAttack), 1.8f); // Adjust this to match your kick animation length
+        Invoke(nameof(EndAttack), 1.8f); // Match your kick animation length
     }
 
     void EndAttack()
@@ -85,7 +85,7 @@ public class EnemyAI : MonoBehaviour
         {
             agent.enabled = true;
 
-            // Force re-target so velocity updates
+            // Force re-target after kick
             if (isChasing && player != null)
                 agent.SetDestination(player.position);
             else if (patrolPoints.Length > 0)
@@ -118,19 +118,19 @@ public class EnemyAI : MonoBehaviour
     {
         isChasing = true;
         agent.speed = chaseSpeed;
-        agent.stoppingDistance = 0f;
+        agent.stoppingDistance = stoppingDistance;   // ← Important
 
         float dist = Vector3.Distance(transform.position, player.position);
 
-        if (dist > 1f)
+        if (dist > stoppingDistance)
         {
             agent.SetDestination(player.position);
         }
         else
         {
+            // Very close - stop moving and prepare for kick
             agent.ResetPath();
-            Vector3 dir = (player.position - transform.position).normalized;
-            transform.position += dir * chaseSpeed * Time.deltaTime;
+            // Do NOT manually move the enemy here - let the attack handle it
         }
     }
 
@@ -143,7 +143,6 @@ public class EnemyAI : MonoBehaviour
             speed = agent.velocity.magnitude;
         }
 
-        // Manual fallback when agent velocity is unreliable (after re-enable)
         if (speed < 0.1f && !isAttacking)
         {
             Vector3 delta = transform.position - lastPosition;
@@ -153,7 +152,7 @@ public class EnemyAI : MonoBehaviour
         lastPosition = transform.position;
 
         bool walking = speed > 0.4f && !isChasing && !isAttacking;
-        bool running = speed > 0.8f && isChasing && !isAttacking;   // higher threshold for running
+        bool running = speed > 0.8f && isChasing && !isAttacking;
 
         anim.SetBool("isWalking", walking);
         anim.SetBool("isRunning", running);

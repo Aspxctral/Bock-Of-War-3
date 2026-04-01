@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health")]
-    public float MaxHealth = 100f;
+    public float maxHealth = 100f;
     private float currentHealth;
     private bool isDead = false;
 
@@ -12,19 +12,21 @@ public class PlayerHealth : MonoBehaviour
     public Slider healthBar;
     public Image fillImage;
 
+    [Header("Death Screen")]
+    public GameObject deathScreen;
+
     [Header("Regen")]
-    public float regenDelay = 15f; // seconds before regen starts
-    public float regenRate = 5f;   // health per second
+    public float regenDelay = 15f;
+    public float regenRate = 5f;
     private float lastDamageTime;
 
-    // References
     private PlayerMovement movementScript;
     private Fighter fighterScript;
     private Animator animator;
 
     void Start()
     {
-        currentHealth = MaxHealth;
+        currentHealth = maxHealth;
         lastDamageTime = Time.time;
 
         movementScript = GetComponent<PlayerMovement>();
@@ -32,16 +34,20 @@ public class PlayerHealth : MonoBehaviour
 
         if (healthBar != null)
         {
-            healthBar.maxValue = MaxHealth;
+            healthBar.maxValue = maxHealth;
             healthBar.value = currentHealth;
         }
+
+        if (deathScreen != null)
+            deathScreen.SetActive(false);
 
         UpdateHealthUI();
     }
 
     void Update()
     {
-        HandleRegen();
+        if (!isDead)
+            HandleRegen();
     }
 
     public void TakeDamage(float amount)
@@ -51,9 +57,9 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= amount;
         currentHealth = Mathf.Max(currentHealth, 0f);
 
-        lastDamageTime = Time.time; // 🔥 reset regen timer
+        lastDamageTime = Time.time;
 
-        Debug.Log($"Player took {amount} damage! Health left: {currentHealth}/{MaxHealth}");
+        Debug.Log($"Player took {amount} damage! Health left: {currentHealth}/{maxHealth}");
 
         UpdateHealthUI();
 
@@ -65,16 +71,12 @@ public class PlayerHealth : MonoBehaviour
 
     void HandleRegen()
     {
-        if (isDead) return;
-
-        // Check if enough time has passed since last damage
         if (Time.time - lastDamageTime >= regenDelay)
         {
-            if (currentHealth < MaxHealth)
+            if (currentHealth < maxHealth)
             {
                 currentHealth += regenRate * Time.deltaTime;
-                currentHealth = Mathf.Min(currentHealth, MaxHealth);
-
+                currentHealth = Mathf.Min(currentHealth, maxHealth);
                 UpdateHealthUI();
             }
         }
@@ -87,37 +89,37 @@ public class PlayerHealth : MonoBehaviour
 
         if (fillImage != null)
         {
-            float healthPercent = currentHealth / MaxHealth;
-
-            if (healthPercent > 0.6f)
+            float percent = currentHealth / maxHealth;
+            if (percent > 0.6f)
                 fillImage.color = Color.green;
-            else if (healthPercent > 0.3f)
+            else if (percent > 0.3f)
                 fillImage.color = Color.yellow;
             else
                 fillImage.color = Color.red;
         }
     }
 
-public void OnLevelUp(int level)
-{
-    Debug.Log("LEVEL UP CALLED: " + level);
-
-    MaxHealth = 100f + (level - 1) * 10f;
-    currentHealth = MaxHealth;
-
-    if (healthBar != null)
+    // FIXED: OnLevelUp method (called from PlayerStats)
+    public void OnLevelUp(int level)
     {
-        healthBar.maxValue = MaxHealth;
-        healthBar.value = currentHealth;
-    }
+        Debug.Log("LEVEL UP CALLED on PlayerHealth: Level " + level);
 
-    UpdateHealthUI();
-}
+        // Increase max health on level up
+        maxHealth = 100f + (level - 1) * 10f;
+        currentHealth = maxHealth;   // Fully heal on level up
+
+        if (healthBar != null)
+        {
+            healthBar.maxValue = maxHealth;
+            healthBar.value = currentHealth;
+        }
+
+        UpdateHealthUI();
+    }
 
     private void Die()
     {
         isDead = true;
-
         Debug.Log("Player died!");
 
         if (movementScript != null)
@@ -136,13 +138,21 @@ public void OnLevelUp(int level)
 
         CapsuleCollider capsule = GetComponent<CapsuleCollider>();
         if (capsule != null)
-        {
             capsule.enabled = false;
-        }
 
-        Destroy(gameObject);
+        if (deathScreen != null)
+            deathScreen.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public float CurrentHealth => currentHealth;
     public bool IsDead => isDead;
+
+    public void RestartGame()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    }
 }
